@@ -11,6 +11,8 @@ import CoreGraphics
 @available(macOS 10.15, iOS 13, *)
 public extension NSItemProvider {
     
+    struct ObjectRetrievalError: Swift.Error {}
+    
     /// retrieve an object of the type passed in
     /// - Parameter type: the type of object you want (e.g. NSImage.self)
     /// - Returns: an instance of the type requested if one is available, otherwise nil
@@ -28,14 +30,14 @@ public extension NSItemProvider {
             if canLoadObject(ofClass: T.self) {
                 loadObject(ofClass: T.self) { object, _ in
                     guard let image = object as? T else {
-                        return continuation.resume(throwing: NSError())
+                        return continuation.resume(throwing: ObjectRetrievalError())
                     }
                     let tosend: T = image.copy() as! T
                     continuation.resume(returning: tosend)
                 }
             }
             else {
-                continuation.resume(throwing: NSError())
+                continuation.resume(throwing: ObjectRetrievalError())
             }
         }
     }
