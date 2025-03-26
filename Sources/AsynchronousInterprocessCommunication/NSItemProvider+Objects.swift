@@ -1,5 +1,5 @@
 //
-//  NSItemProvider+Images.swift
+//  NSItemProvider+Objects.swift
 //  Image Reader
 //
 //  Created by Joseph Wardell on 3/26/25.
@@ -15,7 +15,7 @@ import UIKit
 import CoreGraphics
 
 @available(macOS 10.15, iOS 13, *)
-extension NSItemProvider {
+public extension NSItemProvider {
     
     @MainActor
     @preconcurrency
@@ -55,7 +55,7 @@ extension NSItemProvider {
         else { return nil }
         
         return cgImage
-#endif        
+#endif
     }
 }
 
