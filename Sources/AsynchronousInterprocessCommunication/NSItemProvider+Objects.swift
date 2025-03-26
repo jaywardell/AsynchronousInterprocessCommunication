@@ -11,7 +11,9 @@ import CoreGraphics
 @available(macOS 10.15, iOS 13, *)
 public extension NSItemProvider {
     
-    struct ObjectRetrievalError: Swift.Error {}
+    enum ObjectRetrievalError: Swift.Error {
+     case wrongType
+    }
     
     /// retrieve an object of the type passed in
     /// - Parameter type: the type of object you want (e.g. NSImage.self)
@@ -27,17 +29,16 @@ public extension NSItemProvider {
     func getObject<T: NSObject>(type: T.Type) async throws -> sending T
     where T: NSItemProviderReading {
         try await withCheckedThrowingContinuation { continuation in
-            if canLoadObject(ofClass: T.self) {
-                loadObject(ofClass: T.self) { object, _ in
-                    guard let image = object as? T else {
-                        return continuation.resume(throwing: ObjectRetrievalError())
-                    }
-                    let tosend: T = image.copy() as! T
-                    continuation.resume(returning: tosend)
-                }
+            guard canLoadObject(ofClass: T.self) else {
+                return continuation.resume(throwing: ObjectRetrievalError.wrongType)
             }
-            else {
-                continuation.resume(throwing: ObjectRetrievalError())
+            
+            loadObject(ofClass: T.self) { object, _ in
+                guard let image = object as? T else {
+                    return continuation.resume(throwing: ObjectRetrievalError.wrongType)
+                }
+                let tosend: T = image.copy() as! T
+                continuation.resume(returning: tosend)
             }
         }
     }
