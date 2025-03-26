@@ -7,16 +7,19 @@
 
 import Foundation
 import CoreGraphics
-#if canImport(AppKit)
-import AppKit
-#elseif canImport(UIKit)
-import UIKit
-#endif
-import CoreGraphics
 
 @available(macOS 10.15, iOS 13, *)
 public extension NSItemProvider {
     
+    /// retrieve an object of the type passed in
+    /// - Parameter type: the type of object you want (e.g. NSImage.self)
+    /// - Returns: an instance of the type requested if one is available, otherwise nil
+    ///
+    /// NOTE: it's advisable to not call this method directly.
+    /// To avoid async/await warnings and errors,
+    /// add a method on NSItemProvider that calls this method internally
+    /// and convert the object to a Sendable type before returning
+    /// see `getCGImage()` for an example
     @MainActor
     @preconcurrency
     func getObject<T: NSObject>(type: T.Type) async throws -> sending T
@@ -35,27 +38,6 @@ public extension NSItemProvider {
                 continuation.resume(throwing: NSError())
             }
         }
-    }
-    
-    @MainActor
-    func getCGImage() async throws -> CGImage? {
-        
-#if canImport(AppKit)
-        if #available(macOS 13.0, *) {
-            let image = try await getObject(type: NSImage.self)
-            guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
-            else { return nil }
-            return cgImage
-        }
-        fatalError("\(#function) is only available in macOS 10.15 or iOS 13 or later")
-
-#elseif canImport(UIKit)
-        let image = try await getObject(type: UIImage.self)
-        guard let cgImage = image.cgImage
-        else { return nil }
-        
-        return cgImage
-#endif
     }
 }
 
